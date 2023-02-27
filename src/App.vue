@@ -60,16 +60,18 @@
 import { ref, onMounted } from "vue";
 import {
   collection,
-  getDocs,
   onSnapshot,
   addDoc,
   doc,
   deleteDoc,
-  updateDoc
+  updateDoc,
+  query,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "./firabase/index";
 
 const todosCollectionRef = collection(db, "todos");
+const todosCollectionQuery = query(todosCollectionRef, orderBy("date", "desc"));
 
 const newTodoContent = ref("");
 
@@ -87,7 +89,7 @@ onMounted(() => {
   // });
   // todos.value = fbTodos
 
-  onSnapshot(todosCollectionRef, (querySnapshot) => {
+  onSnapshot(todosCollectionQuery, (querySnapshot) => {
     const fbTodos = [];
     querySnapshot.forEach((doc) => {
       const todo = {
@@ -105,6 +107,7 @@ const addTodo = () => {
   const docRef = addDoc(todosCollectionRef, {
     content: newTodoContent.value,
     done: false,
+    date: Date.now(),
   });
   newTodoContent.value = "";
 };
