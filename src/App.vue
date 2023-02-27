@@ -57,32 +57,68 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { v4 as uuidv4 } from "uuid";
+import { ref, onMounted } from "vue";
+import {
+  collection,
+  getDocs,
+  onSnapshot,
+  addDoc,
+  doc,
+  deleteDoc,
+  updateDoc
+} from "firebase/firestore";
+import { db } from "./firabase/index";
+
+const todosCollectionRef = collection(db, "todos");
 
 const newTodoContent = ref("");
 
 const todos = ref([]);
+onMounted(() => {
+  // const querySnapshot = await getDocs(collection(db, "todos"));
+  // let fbTodos = [];
+  // querySnapshot.forEach((doc) => {
+  // const todo = {
+  //   id: doc.id,
+  //   content: doc.data().content,
+  //   done: doc.data().done
+  // }
+  // fbTodos.push(todo)
+  // });
+  // todos.value = fbTodos
+
+  onSnapshot(todosCollectionRef, (querySnapshot) => {
+    const fbTodos = [];
+    querySnapshot.forEach((doc) => {
+      const todo = {
+        id: doc.id,
+        content: doc.data().content,
+        done: doc.data().done,
+      };
+      fbTodos.push(todo);
+    });
+    todos.value = fbTodos;
+  });
+});
 
 const addTodo = () => {
-  const newTodo = {
-    id: uuidv4(),
+  const docRef = addDoc(todosCollectionRef, {
     content: newTodoContent.value,
     done: false,
-  };
-  todos.value.unshift(newTodo);
+  });
   newTodoContent.value = "";
 };
 
 const deleteTodo = (id) => {
-  todos.value = todos.value.filter((todo) => {
-    return todo.id !== id;
-  });
+  deleteDoc(doc(todosCollectionRef, id));
 };
 
 const toggleDone = (id) => {
-  const index = todos.value.findIndex(todo => todo.id === id)
-  todos.value[index].done = !todos.value[index].done
+  const index = todos.value.findIndex((todo) => todo.id === id);
+
+  updateDoc(doc(todosCollectionRef, id), {
+    done: !todos.value[index].done,
+  });
 };
 </script>
 
